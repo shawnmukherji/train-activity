@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+
+<script src="https://code.jquery.com/jquery-2.2.3.js" integrity="sha256-laXWtGydpwqJ8JA+X9x2miwmaiKhn8tVmOVEigRNtP4=" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+
+<script src="https://www.gstatic.com/firebasejs/4.1.2/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDnnj_AhoZX-Pa4Ud4zchPAI9TJHW6LAAA",
+    authDomain: "traintracker-2ddad.firebaseapp.com",
+    databaseURL: "https://traintracker-2ddad.firebaseio.com",
+    projectId: "traintracker-2ddad",
+    storageBucket: "",
+    messagingSenderId: "408809897054"
+  };
+  firebase.initializeApp(config);
+</script>
+
+<script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+
+
+</head>
+<body>
+
+<div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="panel-primary">
+            <h2 class="panel-heading">Scheduled trains<span id="currentTimeSpan"></span></h2>
+          </div>
+          <div class="panel panel-body">
+            <table class="table table-hover" id='trainScheduleTable'>
+              <thead>
+                <tr>
+                  <th>Train Name</th>
+                  <th>Destination</th>
+                  <th>Frequency (Min)</th>
+                  <th>First Train</th>
+                  <th>Next Scheduled Arrival</th>
+                  <th>ETA:</th>
+                </tr>
+              </thead>
+              <tbody id="trainScheduleBody">
+                
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel-primary">
+            <h2 class="panel-heading">Schedule a new Train</h2>
+          </div>
+          <div class="panel-body">
+
+          <!-- Entry Form -->
+          <form>
+            <div class="form-group">
+              <label for="">Train Name</label>
+              <input type="text" class="form-control" id="trainName">
+            </div>
+
+            <div class="form-group">
+              <label for="">Destination</label>
+              <input type="text" class="form-control" id="destination">
+            </div>
+
+            <div class="form-group">
+              <label for="">Frequency (Minutes)</label>
+              <input type="text" class="form-control" id="frequency">
+            </div>
+
+            <div class="form-group">
+              <label for="">Start Time ( Format 09:45 )</label>
+              <input type="text" class="form-control" id="startTime">
+            </div>
+          
+            <button type="submit" class="btn btn-primary" id="addTrainBtn">Submit</button>
+          </form>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!--firebase-->
+
+<script>
+
+//refernce the database
+
+var database = firebase.database();
+
+
+//initial values 
+
+var a = "";
+var b = "";
+var c = "";
+var d = "";
+
+//clear data form function
+
+clearDataForms = function() {
+  $("#trainName").val("")
+  $("#destination").val("")
+  $("#frequency").val("")
+  $("#startTime").val("")
+
+};
+
+//capture button click
+
+$("#addTrainBtn").on("click", function(event) {
+  event.preventDefault();
+
+//grab values from text boxes
+  a = $("#trainName").val().trim();
+  b = $("#destination").val().trim();
+  c = $("#frequency").val().trim();
+  d = $("#startTime").val().trim();
+
+//push to database
+  database.ref().push({
+    name: a,
+    destination: b,
+    frequency: c,
+    time: d,
+  });
+
+  alert("choo choo");
+  clearDataForms();
+
+});
+
+
+//database.js snapshot and minutes.js 
+
+    //firebase.js function of child added, run function with returned parameter
+      database.on("child_added", function(snapshot) {
+        //variables for name, destination, frequency, and start time
+        var na = snapshot.val().name;
+        var dest = snapshot.val().destination;
+        var freq = snapshot.val().frequency;
+        var st = snapshot.val().start;
+
+        var trainFrequency = freq;
+        var firstTrain = st;
+
+        //subtract one year to ensure to time conflicts over calculated microseconds.
+        var fixTime = moment(firstTrain, "hh:mm").subtract(1, "years");
+        //call moments library
+        var currentMinute = moment();
+        //format currentMinute, post to html
+        $("#currentTimeSpan").html(" Current Time : " + currentMinute.format("hh:mm"));
+
+        var timeDifference = moment().diff(moment(fixTime), "minutes");
+
+        var timeRemaining = timeDifference % trainFrequency;
+
+        var minutesTillTrain = trainFrequency - timeRemaining;
+
+        var nextTrain = moment().add(minutesTillTrain, "minutes")
+
+        var arrivalTime = moment(nextTrain).format("hh:mm");
+
+        //create new row for each train
+        $("#trainScheduleBody").append("<tr><td>" + na + "</td><td>" + dest + "</td><td>" + freq + "</td><td>" + st + "</td><td>" + arrivalTime + "</td><td>" + minutesTillTrain + " Minutes" + "</td></tr>");
+
+    });//end snapshot return function
+
+  
+
+</script>
+
+</body>
+</html>
