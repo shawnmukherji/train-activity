@@ -99,10 +99,11 @@
 
 <script>
 
-//refernce the database
+//refernce the db
 
-var database = firebase.database();
+var db = firebase.database();
 
+var ref = db.ref("/");
 
 //initial values 
 
@@ -133,7 +134,7 @@ $("#addTrainBtn").on("click", function(event) {
   d = $("#startTime").val().trim();
 
 //push to database
-  database.ref().push({
+  db.ref().push({
     name: a,
     destination: b,
     frequency: c,
@@ -146,10 +147,10 @@ $("#addTrainBtn").on("click", function(event) {
 });
 
 
-//database.js snapshot and minutes.js 
+//db.js snapshot and minutes.js 
 
-    //firebase.js function of child added, run function with returned parameter
-      database.on("child_added", function(snapshot) {
+    
+        ref.on("child_added", function(snapshot) {
         //variables for name, destination, frequency, and start time
         var na = snapshot.val().name;
         var dest = snapshot.val().destination;
